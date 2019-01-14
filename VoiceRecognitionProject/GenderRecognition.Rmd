@@ -1,0 +1,54 @@
+---
+title: "GenderRecognition"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+author: ["Valentin Buisson", "Louis Gaillet", "Soilhat Mohamed", "Sébastien Roques"]
+date: "`r Sys.Date()`"
+#knit: "bookdown::render_book"
+site: bookdown::bookdown_site
+documentclass: book
+description: "Gender Recognition serves AI and Chatbots to the identification of the gender of their interlocutor"
+github-repo: Soilhat/VoiceRecognitionProject
+url: 'https://github.com/Soilhat/VoiceRecognitionProject'
+---
+
+# Initialisation Dataset
+
+First we needed to find a large dataset to train our models : we inally found it on the internet.
+
+Each voice sample is stored as a .WAV file, which is then pre-processed for acoustic analysis using the specan function from the WarbleR R package. Specan measures 22 acoustic parameters on acoustic signals for which the start and end times are provided.
+
+The output from the pre-processed WAV files were saved into a CSV file, containing 3168 rows and 21 columns (20 columns for each feature and one label column for the classification of male or female). You can download the pre-processed dataset in CSV format, using the link above.
+
+Let's see the first 5 samples :
+
+```{r}
+dataset <- read.csv("voice.csv")
+dataset[1:5,]
+```
+Here are the information we've got :
+
+* duration: length of signal
+* meanfreq: mean frequency (in kHz)
+* sd: standard deviation of frequency
+* median: median frequency (in kHz)
+* Q25: first quantile (in kHz)
+* Q75: third quantile (in kHz)
+* IQR: interquantile range (in kHz)
+* skew: skewness (see note in specprop description)
+* kurt: kurtosis (see note in specprop description)
+* sp.ent: spectral entropy
+* sfm: spectral flatness
+* mode: mode frequency
+* centroid: frequency centroid (see specprop)
+* peakf: peak frequency (frequency with highest energy)
+* meanfun: average of fundamental frequency measured across acoustic signal
+* minfun: minimum fundamental frequency measured across acoustic signal
+* maxfun: maximum fundamental frequency measured across acoustic signal
+* meandom: average of dominant frequency measured across acoustic signal
+* mindom: minimum of dominant frequency measured across acoustic signal
+* maxdom: maximum of dominant frequency measured across acoustic signal
+* dfrange: range of dominant frequency measured across acoustic signal
+* modindx: modulation index. Calculated as the accumulated absolute difference between adjacent measurements of fundamental frequencies divided by the frequency range
+
