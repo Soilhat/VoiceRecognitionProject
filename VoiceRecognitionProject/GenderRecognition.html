@@ -203,32 +203,16 @@ $(document).ready(function () {
 <p>First we needed to find a large dataset to train our models : we inally found it on the internet.</p>
 <p>Each voice sample is stored as a .WAV file, which is then pre-processed for acoustic analysis using the specan function from the WarbleR R package. Specan measures 22 acoustic parameters on acoustic signals for which the start and end times are provided.</p>
 <p>The output from the pre-processed WAV files were saved into a CSV file, containing 3168 rows and 21 columns (20 columns for each feature and one label column for the classification of male or female). You can download the pre-processed dataset in CSV format, using the link above.</p>
+<p>Let’s see the first sample :</p>
 <pre class="r"><code>dataset &lt;- read.csv(&quot;voice.csv&quot;)
-dataset[1:5,]</code></pre>
-<pre><code>##     meanfreq         sd     median         Q25        Q75        IQR
-## 1 0.05978098 0.06424127 0.03202691 0.015071489 0.09019344 0.07512195
-## 2 0.06600874 0.06731003 0.04022873 0.019413867 0.09266619 0.07325232
-## 3 0.07731550 0.08382942 0.03671846 0.008701057 0.13190802 0.12320696
-## 4 0.15122809 0.07211059 0.15801119 0.096581728 0.20795525 0.11137352
-## 5 0.13512039 0.07914610 0.12465623 0.078720218 0.20604493 0.12732471
-##        skew        kurt    sp.ent       sfm       mode   centroid
-## 1 12.863462  274.402906 0.8933694 0.4919178 0.00000000 0.05978098
-## 2 22.423285  634.613855 0.8921932 0.5137238 0.00000000 0.06600874
-## 3 30.757155 1024.927705 0.8463891 0.4789050 0.00000000 0.07731550
-## 4  1.232831    4.177296 0.9633225 0.7272318 0.08387819 0.15122809
-## 5  1.101174    4.333713 0.9719551 0.7835681 0.10426140 0.13512039
-##      meanfun     minfun    maxfun     meandom    mindom    maxdom
-## 1 0.08427911 0.01570167 0.2758621 0.007812500 0.0078125 0.0078125
-## 2 0.10793655 0.01582591 0.2500000 0.009014423 0.0078125 0.0546875
-## 3 0.09870626 0.01565558 0.2711864 0.007990057 0.0078125 0.0156250
-## 4 0.08896485 0.01779755 0.2500000 0.201497396 0.0078125 0.5625000
-## 5 0.10639784 0.01693122 0.2666667 0.712812500 0.0078125 5.4843750
-##     dfrange    modindx label
-## 1 0.0000000 0.00000000  male
-## 2 0.0468750 0.05263158  male
-## 3 0.0078125 0.04651163  male
-## 4 0.5546875 0.24711908  male
-## 5 5.4765625 0.20827389  male</code></pre>
+dataset[1,]</code></pre>
+<pre><code>##     meanfreq         sd     median        Q25        Q75        IQR
+## 1 0.05978098 0.06424127 0.03202691 0.01507149 0.09019344 0.07512195
+##       skew     kurt    sp.ent       sfm mode   centroid    meanfun
+## 1 12.86346 274.4029 0.8933694 0.4919178    0 0.05978098 0.08427911
+##       minfun    maxfun   meandom    mindom    maxdom dfrange modindx label
+## 1 0.01570167 0.2758621 0.0078125 0.0078125 0.0078125       0       0  male</code></pre>
+<p>Here are the information we’ve got :</p>
 <ul>
 <li>duration: length of signal</li>
 <li>meanfreq: mean frequency (in kHz)</li>
@@ -253,6 +237,81 @@ dataset[1:5,]</code></pre>
 <li>dfrange: range of dominant frequency measured across acoustic signal</li>
 <li>modindx: modulation index. Calculated as the accumulated absolute difference between adjacent measurements of fundamental frequencies divided by the frequency range</li>
 </ul>
+<p>Now we need to split the dataset into 2 part : the training set and the test set.</p>
+<pre class="r"><code>library(caTools);</code></pre>
+<pre><code>## Warning: package 'caTools' was built under R version 3.4.4</code></pre>
+<pre class="r"><code>set.seed('79')
+split = sample.split(dataset$label, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)</code></pre>
+<p>In our case we have a huge amount of informations and variables in our dataset. We new to find witch variables are the more efficient in a gender recognition. Instinctively, we can say that the frequency is a great indicator in this case. Let’s see if this is real by taking the average frequency measurement:</p>
+<pre class="r"><code>summary(glm(formula = label ~ meandom, family = &quot;binomial&quot;, data = training_set))</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = label ~ meandom, family = &quot;binomial&quot;, data = training_set)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.4361  -1.1665   0.1171   1.1342   1.8086  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  0.59579    0.07947   7.497 6.51e-14 ***
+## meandom     -0.71815    0.08217  -8.740  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 3293.8  on 2375  degrees of freedom
+## Residual deviance: 3213.7  on 2374  degrees of freedom
+## AIC: 3217.7
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<p>We can now be sure that the frequency is a great indicator. What about the others ?</p>
+<pre class="r"><code>summary(glm(formula = label ~ ., family = &quot;binomial&quot;, data = training_set))</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = label ~ ., family = &quot;binomial&quot;, data = training_set)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -3.1386  -0.0366   0.0003   0.1101   4.3393  
+## 
+## Coefficients: (3 not defined because of singularities)
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -1.843e+01  1.088e+01  -1.694 0.090193 .  
+## meanfreq     4.330e+01  5.311e+01   0.815 0.414906    
+## sd           7.114e+01  4.109e+01   1.731 0.083375 .  
+## median      -2.252e+01  1.481e+01  -1.520 0.128497    
+## Q25         -5.198e+01  1.305e+01  -3.983 6.81e-05 ***
+## Q75          2.753e+01  2.374e+01   1.160 0.246122    
+## IQR                 NA         NA      NA       NA    
+## skew         1.354e-02  1.874e-01   0.072 0.942402    
+## kurt        -4.263e-03  4.932e-03  -0.864 0.387358    
+## sp.ent       4.372e+01  1.190e+01   3.675 0.000238 ***
+## sfm         -1.371e+01  2.987e+00  -4.588 4.48e-06 ***
+## mode         4.507e+00  2.507e+00   1.798 0.072209 .  
+## centroid            NA         NA      NA       NA    
+## meanfun     -1.698e+02  1.022e+01 -16.610  &lt; 2e-16 ***
+## minfun       4.255e+01  1.041e+01   4.086 4.38e-05 ***
+## maxfun      -1.592e-01  7.649e+00  -0.021 0.983397    
+## meandom     -3.115e-01  4.939e-01  -0.631 0.528218    
+## mindom      -2.750e-01  2.455e+00  -0.112 0.910823    
+## maxdom       2.753e-02  8.151e-02   0.338 0.735559    
+## dfrange             NA         NA      NA       NA    
+## modindx     -3.178e+00  1.830e+00  -1.737 0.082427 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 3293.8  on 2375  degrees of freedom
+## Residual deviance:  424.4  on 2358  degrees of freedom
+## AIC: 460.4
+## 
+## Number of Fisher Scoring iterations: 8</code></pre>
+<p>We have here 9 significant properties that help define the gender.</p>
 </div>
 
 

@@ -21,11 +21,11 @@ Each voice sample is stored as a .WAV file, which is then pre-processed for acou
 
 The output from the pre-processed WAV files were saved into a CSV file, containing 3168 rows and 21 columns (20 columns for each feature and one label column for the classification of male or female). You can download the pre-processed dataset in CSV format, using the link above.
 
-Let's see the first 5 samples :
+Let's see the first sample :
 
 ```{r}
 dataset <- read.csv("voice.csv")
-dataset[1:5,]
+dataset[1,]
 ```
 Here are the information we've got :
 
@@ -52,3 +52,28 @@ Here are the information we've got :
 * dfrange: range of dominant frequency measured across acoustic signal
 * modindx: modulation index. Calculated as the accumulated absolute difference between adjacent measurements of fundamental frequencies divided by the frequency range
 
+
+Now we need to split the dataset into 2 part : the training set and the test set.
+```{r}
+library(caTools);
+set.seed('79')
+split = sample.split(dataset$label, SplitRatio = 0.75)
+training_set = subset(dataset, split == TRUE)
+test_set = subset(dataset, split == FALSE)
+```
+
+# Logistic Regression
+
+In our case we have a huge amount of informations and variables in our dataset. We new to find witch variables are the more efficient in a gender recognition. Instinctively, we can say that the frequency is a great indicator in this case. Let's see if this is real by taking the average frequency measurement:
+
+```{r}
+summary(glm(formula = label ~ meandom, family = "binomial", data = training_set))
+```
+
+We can now be sure that the frequency is a great indicator. What about the others ?
+
+```{r}
+summary(glm(formula = label ~ ., family = "binomial", data = training_set))
+```
+
+We have here 8 significant properties that help define the gender.
