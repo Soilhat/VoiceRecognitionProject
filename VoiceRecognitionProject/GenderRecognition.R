@@ -31,6 +31,14 @@ modelForest
 cmF <- table(predict(modelForest, test_set), test_set$label)
 (cmF[1,1] + cmF[2,2]) / sum(cmF) # accuracy
 
+#XGBoost
+library(xgboost)
+library(car)
+y <- recode(training_set$label," 'female'=0; 'male'=1")
+xgb <- xgboost(data = data.matrix(training_set), label = training_set$label, nrounds = 25)
+pred <- predict(xgb,data.matrix(test_set))
+table(pred, test_set$label)
+
 # Decision Tree
 
 library(rpart)
@@ -43,9 +51,9 @@ findgender <- function(voicedata) # Using Logistic Regression
   dataset <- read.csv("voice.csv")
   library(caTools);
   model <- glm(formula = label ~ ., family = "binomial", data = dataset)
-  predictor = predict(model, newdata = voicedata, type="response")
+  predictor = predict(model, voicedata)
   return(ifelse(predictor > 0.5, "Male", "Female"))
 }
-
-test = findgender(dataset[1,1:20])
+dataset[1586,1:20]
+test = findgender(dataset[1586,1:20])
 test

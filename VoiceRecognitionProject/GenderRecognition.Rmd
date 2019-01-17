@@ -104,11 +104,24 @@ library(randomForest)
 modelForest <- randomForest(label ~., data= training_set, ntree = 500, na.action = na.omit)
 modelForest
 ```
-Here we specify with the parameter *na.action = na.omit* to omit the unknown values. We find an error rate of 2% so a __98 %__ accuracy on the training set, the result is similar as the model with Logistic Regression.
+Here we specify with the parameter *na.action = na.omit* to omit the unknown values. We find an error rate of 2% so a ___98 %___ accuracy on the training set, the result is similar as the model with Logistic Regression.
 
 Now lets do a prediction:
 ```{r}
 cmF <- table(predict(modelForest, test_set), test_set$label)
 (cmF[1,1] + cmF[2,2]) / sum(cmF) # accuracy
 ```
-We find a 98% accuracy on the test set.
+We find a __98%__ accuracy on the test set. That's a higher accuracy than the Logistic Regression.
+
+# XGBoost
+
+```{r}
+library(xgboost)
+library(car)
+y <- recode(training_set$label," 'female'=0; 'male'=1")
+xgb <- xgboost(data = data.matrix(training_set), label = training_set$label, nrounds = 25);
+pred <- predict(xgb,data.matrix(test_set))
+table(pred, test_set$label)
+```
+
+Here We find a __100%___ accuracy on the test set. That's the best model so far.
