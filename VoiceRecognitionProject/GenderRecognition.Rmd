@@ -77,3 +77,38 @@ summary(glm(formula = label ~ ., family = "binomial", data = training_set))
 ```
 
 We have here 8 significant properties that help define the gender.
+We decided to do the logistic regression on all the variables provided.
+
+```{r}
+model <- glm(formula = label ~ ., family = "binomial", data = training_set)
+```
+
+Once the model is done, we have to predict the gender on the test set and do a convolution matrix to observe the result
+
+```{r}
+predictor = predict(model, newdata = test_set, type="response")
+avgpredictor = ifelse(predictor > 0.5, 1,0)
+cm = table(test_set[,21], avgpredictor)
+mosaicplot(cm,col=sample(1:8,2))
+```
+
+We can see that the model is very efficient with a __97%__ accuracy. Let's try this test with other models.
+
+# Random Forest
+
+```{r}
+# install.packages("randomForest")
+library(randomForest)
+```
+```{r}
+modelForest <- randomForest(label ~., data= training_set, ntree = 500, na.action = na.omit)
+modelForest
+```
+Here we specify with the parameter *na.action = na.omit* to omit the unknown values. We find an error rate of 2% so a __98 %__ accuracy on the training set, the result is similar as the model with Logistic Regression.
+
+Now lets do a prediction:
+```{r}
+cmF <- table(predict(modelForest, test_set), test_set$label)
+(cmF[1,1] + cmF[2,2]) / sum(cmF) # accuracy
+```
+We find a 98% accuracy on the test set.
